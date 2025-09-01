@@ -4,7 +4,7 @@ function App() {
     const [board, setBoard] = useState(Array(9).fill(null));
     const [isXTurn, setIsXTurn] = useState(true);
     const [winner, setWinner] = useState(null);
-    const [mode, setMode] = useState(null); // ✅ game mode (player/ai)
+    const [mode, setMode] = useState(null); 
 
     const handleClick = (index) => {
         if (board[index] || winner || !mode) return;
@@ -29,14 +29,13 @@ function App() {
     };
 
 
-    // ✅ Minimax AI
     const aiMove = (newBoard) => {
         let bestScore = -Infinity;
         let move;
 
         for (let i = 0; i < newBoard.length; i++) {
             if (newBoard[i] === null) {
-                newBoard[i] = "O"; // AI is always O
+                newBoard[i] = "O";
                 let score = minimax(newBoard, 0, false);
                 newBoard[i] = null;
                 if (score > bestScore) {
@@ -56,12 +55,12 @@ function App() {
         }
     };
 
-    // ✅ Minimax Recursive Function
+  
     const minimax = (board, depth, isMaximizing) => {
         let result = checkWinner(board);
         if (result !== null) {
-            if (result === "X") return -10 + depth; // human wins → bad for AI
-            if (result === "O") return 10 - depth; // AI wins
+            if (result === "X") return -10 + depth; 
+            if (result === "O") return 10 - depth; 
             if (result === "Draw") return 0;
         }
 
@@ -90,7 +89,7 @@ function App() {
         }
     };
 
-    // ✅ Modified: return winner instead of just setting state
+   
     const checkWinner = (board) => {
         const winningCombos = [
             [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -123,7 +122,7 @@ function App() {
         <div>
             <h1 className="font-bold text-3xl text-center mt-12">Tic Tac Toe</h1>
 
-            {/* Mode selection */}
+         
             {!mode && (
                 <div className="flex justify-center gap-4 mt-6">
                     <button
@@ -141,7 +140,7 @@ function App() {
                 </div>
             )}
 
-            {/* Board */}
+           
             {mode && (
                 <div className="board grid grid-cols-3 gap-2 w-72 sm:w-96 md:w-[480px] m-auto mt-8">
                     {board.map((value, index) => (
@@ -156,7 +155,7 @@ function App() {
                 </div>
             )}
 
-            {/* Winner Message */}
+            
             {winner && (
                 <div className="text-center mt-6 text-xl font-semibold">
                     {winner === "Draw"
