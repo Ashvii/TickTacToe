@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 
 function App() {
     const [board, setBoard] = useState(Array(9).fill(null));
     const [isXTurn, setIsXTurn] = useState(true);
     const [winner, setWinner] = useState(null);
-    const [mode, setMode] = useState(null); 
+    const [mode, setMode] = useState(null);
+    const [difficulty, setDifficulty] = useState(null);
 
     const handleClick = (index) => {
         if (board[index] || winner || !mode) return;
@@ -19,8 +20,6 @@ function App() {
             return;
         }
 
-        // If playing vs AI and the human just placed "X",
-        // then trigger AI's move next.
         if (mode === "ai" && isXTurn) {
             setTimeout(() => aiMove(newBoard), 200);
         } else {
@@ -28,8 +27,41 @@ function App() {
         }
     };
 
-
     const aiMove = (newBoard) => {
+        let move;
+
+        if (difficulty === "easy") {
+            move = randomMove(newBoard);
+        } else if (difficulty === "medium") {
+            // 50% chance to choose optimal move
+            if (Math.random() < 0.5) {
+                move = randomMove(newBoard);
+            } else {
+                move = optimalMove(newBoard);
+            }
+        } else if (difficulty === "hard") {
+            move = optimalMove(newBoard);
+        }
+
+        if (move !== undefined) {
+            newBoard[move] = "O";
+            setBoard([...newBoard]);
+            setIsXTurn(true);
+
+            const result = checkWinner(newBoard);
+            if (result) setWinner(result);
+        }
+    };
+
+    const randomMove = (newBoard) => {
+        const emptyIndices = newBoard
+            .map((val, idx) => (val === null ? idx : null))
+            .filter(val => val !== null);
+        const randomIdx = Math.floor(Math.random() * emptyIndices.length);
+        return emptyIndices[randomIdx];
+    };
+
+    const optimalMove = (newBoard) => {
         let bestScore = -Infinity;
         let move;
 
@@ -44,23 +76,14 @@ function App() {
                 }
             }
         }
-
-        if (move !== undefined) {
-            newBoard[move] = "O";
-            setBoard([...newBoard]);
-            setIsXTurn(true);
-
-            const result = checkWinner(newBoard);
-            if (result) setWinner(result);
-        }
+        return move;
     };
 
-  
     const minimax = (board, depth, isMaximizing) => {
         let result = checkWinner(board);
         if (result !== null) {
-            if (result === "X") return -10 + depth; 
-            if (result === "O") return 10 - depth; 
+            if (result === "X") return -10 + depth;
+            if (result === "O") return 10 - depth;
             if (result === "Draw") return 0;
         }
 
@@ -89,7 +112,6 @@ function App() {
         }
     };
 
-   
     const checkWinner = (board) => {
         const winningCombos = [
             [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -116,59 +138,85 @@ function App() {
         setIsXTurn(true);
         setWinner(null);
         setMode(null);
+        setDifficulty(null);
     };
 
     return (
-        <div>
+        <div className='startpage items-center justify-center flex flex-col h-screen bg-gray-100 '>
+
             <h1 className="font-bold text-3xl text-center mt-12">Tic Tac Toe</h1>
 
-         
             {!mode && (
+                <div className="flex flex-col items-center gap-4 mt-6">
+                    <div>
+                        <button
+                            onClick={() => setMode("player")}
+                            className="bg-green-500 text-black border-2 px-4 py-2 rounded cursor-pointer mr-4"
+                        >
+                            Play with Player
+                        </button>
+                        <button
+                            onClick={() => setMode("ai")}
+                            className="bg-purple-500 text-black border-2 px-4 py-2 rounded cursor-pointer"
+                        >
+                            Play with AI
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {mode === "ai" && !difficulty && (
                 <div className="flex justify-center gap-4 mt-6">
                     <button
-                        onClick={() => setMode("player")}
-                        className="bg-green-500 text-black border-2 px-4 py-2 rounded"
+                        onClick={() => setDifficulty("easy")}
+                        className="bg-yellow-400 text-black border-2 px-4 py-2 rounded cursor-pointer"
                     >
-                        Play with Player
+                        Easy
                     </button>
                     <button
-                        onClick={() => setMode("ai")}
-                        className="bg-purple-500 text-black border-2 px-4 py-2 rounded"
+                        onClick={() => setDifficulty("medium")}
+                        className="bg-orange-500 text-black border-2 px-4 py-2 rounded cursor-pointer"
                     >
-                        Play with AI
+                        Medium
+                    </button>
+                    <button
+                        onClick={() => setDifficulty("hard")}
+                        className="bg-red-600 text-white border-2 px-4 py-2 rounded cursor-pointer"
+                    >
+                        Hard
                     </button>
                 </div>
             )}
 
-           
-            {mode && (
-                <div className="board grid grid-cols-3 gap-2 w-72 sm:w-96 md:w-[480px] m-auto mt-8">
-                    {board.map((value, index) => (
-                        <div
-                            key={index}
-                            onClick={() => handleClick(index)}
-                            className="boxes flex items-center justify-center cursor-pointer aspect-square bg-gray-300 border-2 border-black text-6xl font-bold"
-                        >
-                            {value}
+            {mode && difficulty && (
+                <div>
+                    <div className="board grid grid-cols-3 gap-2 w-72 sm:w-96 md:w-[480px] m-auto mt-8">
+                        {board.map((value, index) => (
+                            <div
+                                key={index}
+                                onClick={() => handleClick(index)}
+                                className="boxes flex items-center justify-center cursor-pointer aspect-square bg-gray-300 border-2 border-black text-6xl font-bold"
+                            >
+                                {value}
+                            </div>
+                        ))}
+                    </div>
+
+                    {winner && (
+                        <div className="text-center mt-6 text-xl font-semibold">
+                            {winner === "Draw"
+                                ? "It's a Draw!"
+                                : winner === "X"
+                                    ? "You Win! 🎉"
+                                    : "AI Wins 🤖"}
+                            <button
+                                onClick={resetGame}
+                                className="ml-4 bg-blue-500 text-white border-2 px-4 py-2 rounded"
+                            >
+                                Restart
+                            </button>
                         </div>
-                    ))}
-                </div>
-            )}
-
-            
-            {winner && (
-                <div className="text-center mt-6 text-xl font-semibold">
-                    {winner === "Draw"
-                        ? "It's a Draw!"
-                        : winner === "X"
-                            ? "You Win! 🎉"
-                            : "AI Wins 🤖"}
-                    <button
-                        onClick={resetGame}
-                        className="ml-4 bg-blue-500 text-black border-2 px-4 py-2 rounded"
-                    >
-                        Restart
-                    </button>
+                    )}
                 </div>
             )}
         </div>
